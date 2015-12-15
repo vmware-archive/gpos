@@ -20,9 +20,6 @@
 #include "gpos/memory/CCache.h"
 #include "gpos/memory/CCacheFactory.h"
 
-// default initial value of the gclock counter during insertion of an entry
-#define CCACHE_GCLOCK_INIT_COUNTER 3
-
 using namespace gpos;
 
 // global instance of cache factory
@@ -72,6 +69,7 @@ CCacheFactory::Pmp() const
 //---------------------------------------------------------------------------
 GPOS_RESULT
 CCacheFactory::EresInit()
+
 {
 	GPOS_ASSERT(NULL == Pcf() &&
 			    "Cache factory was already initialized");
@@ -107,7 +105,6 @@ CCacheFactory::EresInit()
 		}
 	}
 	GPOS_CATCH_END;
-
 	return eres;
 }
 
@@ -137,40 +134,4 @@ CCacheFactory::Shutdown()
 	// release allocated memory pool
 	CMemoryPoolManager::Pmpm()->Destroy(pmp);
 }
-
-
-//---------------------------------------------------------------------------
-//	@function:
-//		CCacheFactory::PCacheCreate
-//
-//	@doc:
-//		Creates a new cache instance
-//
-//---------------------------------------------------------------------------
-CCache *
-CCacheFactory::PCacheCreate
-	(
-	BOOL fUnique,
-	ULLONG ullCacheQuota,
-	HashFuncPtr pfuncHash,
-	EqualFuncPtr pfuncEqual
-	)
-{
-	GPOS_ASSERT(NULL != Pcf() &&
-			    "Cache factory has not been initialized");
-
-	IMemoryPool *pmp = Pcf()->Pmp();
-	CCache *pcache = GPOS_NEW(pmp) CCache
-				(
-				pmp,
-				fUnique,
-				ullCacheQuota,
-				CCACHE_GCLOCK_INIT_COUNTER,
-				pfuncHash,
-				pfuncEqual
-				);
-
-	return pcache;
-}
-
 // EOF
