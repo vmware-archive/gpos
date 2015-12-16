@@ -53,6 +53,7 @@ CCacheTest::EresUnittest()
 	CUnittest rgut[] =
 		{
 		GPOS_UNITTEST_FUNC(CCacheTest::EresUnittest_Basic),
+		GPOS_UNITTEST_FUNC(CCacheTest::EresUnittest_Refcount),
 		GPOS_UNITTEST_FUNC(CCacheTest::EresUnittest_Eviction),
 		GPOS_UNITTEST_FUNC(CCacheTest::EresUnittest_Iteration),
 		GPOS_UNITTEST_FUNC(CCacheTest::EresUnittest_DeepObject),
@@ -87,6 +88,39 @@ CCacheTest::SSimpleObject::FMyEqual
 	ULONG* const & pvKey,
 	ULONG* const & pvKeySecond
 	)
+{
+	BOOL fReturn = false;
+
+	if (NULL == pvKey && NULL == pvKeySecond)
+	{
+		fReturn = true;
+	}
+	else if (NULL == pvKey || NULL == pvKeySecond)
+	{
+		fReturn = false;
+	}
+	else
+	{
+		fReturn = (*pvKey) == (*pvKeySecond);
+	}
+
+	return fReturn;
+}
+
+//---------------------------------------------------------------------------
+//	@function:
+//		CCacheTest::SSimpleRefCountObject::FMyEqual
+//
+//	@doc:
+//		Key equality function
+//
+//---------------------------------------------------------------------------
+BOOL
+CCacheTest::SSimpleRefCountObject::FMyEqual
+					(
+					ULONG* const & pvKey,
+					ULONG* const & pvKeySecond
+					)
 {
 	BOOL fReturn = false;
 
@@ -309,6 +343,65 @@ CCacheTest::EresUnittest_Basic()
 	}
 
 	GPOS_ASSERT(0 == pcache->UlpEntries());
+
+	return GPOS_OK;
+}
+
+//---------------------------------------------------------------------------
+//	@function:
+//		CCacheTest::EresUnittest_Refcount
+//
+//	@doc:
+//		Basic Ref count test:
+//			Insert Ref Count object, dec ref count of the object, and get the object from cache
+//
+//---------------------------------------------------------------------------
+GPOS_RESULT
+CCacheTest::EresUnittest_Refcount()
+{
+	CAutoP<CCache<SSimpleRefCountObject*, ULONG*> > apcache;
+	apcache = CCacheFactory::PCacheCreate<SSimpleRefCountObject*, ULONG*>
+				(
+				fUnique,
+				UNLIMITED_CACHE_QUOTA,
+				SSimpleRefCountObject::UlMyHash,
+				SSimpleRefCountObject::FMyEqual
+				);
+
+	CCache<SSimpleRefCountObject*, ULONG* > *pcache = apcache.Pt();
+	SSimpleRefCountObject *pso = NULL;
+	CRefCount* pcrcValue = NULL;
+	//Scope of the accessor when we insert
+	{
+		CSimpleRefCountObjectCacheAccessor ca(pcache);
+		IMemoryPool* pmp = ca.Pmp();
+		pcrcValue = GPOS_NEW(pmp) CRefCount();
+
+		GPOS_ASSERT(1 == pcrcValue->UlpRefCount());
+
+		pso = GPOS_NEW(pmp) SSimpleRefCountObject(1, pcrcValue);
+
+	#ifdef GPOS_DEBUG
+		SSimpleRefCountObject *psoReturned =
+	#endif // GPOS_DEBUG
+			ca.PtInsert(&(pso->m_ulKey), pso);
+
+		GPOS_ASSERT(1 == pcrcValue->UlpRefCount());
+
+		GPOS_ASSERT(psoReturned == pso &&
+					"Incorrect cache entry was inserted");
+
+		//Ideally it shouldn't delete itself because CCache is still holding this object
+		pcrcValue->Release();
+	}
+	//Create new access for lookup
+	CSimpleRefCountObjectCacheAccessor ca(pcache);
+
+	//Ideally Lookup should return valid object. Until CCache evict and no one has reference to it, this object can't be deleted
+	ca.Lookup(&(pso->m_ulKey));
+
+	//Deference it to make sure memory is valid and it doesn't throw exception / crash
+	GPOS_ASSERT(1 == (*(ca.PtVal()->m_pcrcValue)).UlpRefCount());
 
 	return GPOS_OK;
 }
