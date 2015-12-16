@@ -61,15 +61,16 @@ namespace gpos
 			// no copy ctor
 			CCacheFactory(const CCacheFactory&);
 
+
+
+		public:
+
 			// private dtor
 			~CCacheFactory()
 			{
 				GPOS_ASSERT(NULL == m_pcf &&
 							"Cache factory has not been shut down");
 			}
-
-
-		public:
 
 			// initialize global memory pool
 			static
