@@ -439,9 +439,21 @@ namespace gpos
 			// cleans up when cache is destroyed
 			void Cleanup()
 			{
-				m_sht.DestroyEntries(DestroyCacheEntry);
+				m_sht.DestroyEntries(DestroyCacheEntryWithRefCountTest);
 				GPOS_DELETE(m_chtitClockHand);
 				m_chtitClockHand = NULL;
+			}
+
+			static
+			void DestroyCacheEntryWithRefCountTest(CCacheHashTableEntry *pce)
+			{
+				GPOS_ASSERT(NULL != pce);
+
+				// This assert is valid only when ccache get deleted. At that point nobody should hold a pointer to an object in CCache.
+				// If ref count is not 1, then we possibly have a leak.
+				GPOS_ASSERT(EXPECTED_REF_COUNT_FOR_DELETE == pce->UlRefCount() && "Expected CCacheEntry's refcount to be 1 before it get deleted");
+
+				DestroyCacheEntry(pce);
 			}
 
 			// destroy a cache entry
@@ -449,6 +461,7 @@ namespace gpos
 			void DestroyCacheEntry(CCacheHashTableEntry *pce)
 			{
 				GPOS_ASSERT(NULL != pce);
+
 				// destroy the object before deleting memory pool. This cover the case where object & cacheentry use same memory pool
 				IMemoryPool* pmp = pce->Pmp();
 				GPOS_DELETE(pce);

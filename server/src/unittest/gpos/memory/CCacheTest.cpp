@@ -650,6 +650,7 @@ CCacheTest::EresInsertDuplicates
 
 			GPOS_ASSERT(NULL != psoReturned);
 
+			pso->Release();
 		}
 		GPOS_CHECK_ABORT;
 	}
@@ -756,6 +757,7 @@ CCacheTest::EresUnittest_DeepObject()
 		CDeepObject *pdoReturned =
 #endif // GPOS_DEBUG
 			ca.PtInsert(pdo->PKey(), pdo);
+		pdo->Release();
 
 		GPOS_ASSERT(NULL != pdoReturned &&
 				    "Incorrect cache entry was inserted");
