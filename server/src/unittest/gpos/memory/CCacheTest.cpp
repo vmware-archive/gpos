@@ -107,39 +107,6 @@ CCacheTest::SSimpleObject::FMyEqual
 	return fReturn;
 }
 
-//---------------------------------------------------------------------------
-//	@function:
-//		CCacheTest::SSimpleRefCountObject::FMyEqual
-//
-//	@doc:
-//		Key equality function
-//
-//---------------------------------------------------------------------------
-BOOL
-CCacheTest::SSimpleRefCountObject::FMyEqual
-					(
-					ULONG* const & pvKey,
-					ULONG* const & pvKeySecond
-					)
-{
-	BOOL fReturn = false;
-
-	if (NULL == pvKey && NULL == pvKeySecond)
-	{
-		fReturn = true;
-	}
-	else if (NULL == pvKey || NULL == pvKeySecond)
-	{
-		fReturn = false;
-	}
-	else
-	{
-		fReturn = (*pvKey) == (*pvKeySecond);
-	}
-
-	return fReturn;
-}
-
 
 //---------------------------------------------------------------------------
 //	@function:
@@ -276,6 +243,9 @@ CCacheTest::EresUnittest_Basic()
 #endif // GPOS_DEBUG
 			ca.PtInsert(&(pso->m_ulKey), pso);
 
+		//release the ownership from pso, but ccacheentry still has the ownership
+		pso->Release();
+
 		GPOS_ASSERT(psoReturned == pso &&
 				    "Incorrect cache entry was inserted");
 		GPOS_ASSERT(1 == pcache->UlpEntries());
@@ -359,49 +329,53 @@ CCacheTest::EresUnittest_Basic()
 GPOS_RESULT
 CCacheTest::EresUnittest_Refcount()
 {
-	CAutoP<CCache<SSimpleRefCountObject*, ULONG*> > apcache;
-	apcache = CCacheFactory::PCacheCreate<SSimpleRefCountObject*, ULONG*>
+	CAutoP<CCache<SSimpleObject*, ULONG*> > apcache;
+	apcache = CCacheFactory::PCacheCreate<SSimpleObject*, ULONG*>
 				(
 				fUnique,
 				UNLIMITED_CACHE_QUOTA,
-				SSimpleRefCountObject::UlMyHash,
-				SSimpleRefCountObject::FMyEqual
+				SSimpleObject::UlMyHash,
+				SSimpleObject::FMyEqual
 				);
 
-	CCache<SSimpleRefCountObject*, ULONG* > *pcache = apcache.Pt();
-	SSimpleRefCountObject *pso = NULL;
-	CRefCount* pcrcValue = NULL;
+	CCache<SSimpleObject*, ULONG* > *pcache = apcache.Pt();
+	SSimpleObject *pso = NULL;
 	//Scope of the accessor when we insert
 	{
-		CSimpleRefCountObjectCacheAccessor ca(pcache);
+		CSimpleObjectCacheAccessor ca(pcache);
 		IMemoryPool* pmp = ca.Pmp();
-		pcrcValue = GPOS_NEW(pmp) CRefCount();
 
-		GPOS_ASSERT(1 == pcrcValue->UlpRefCount());
-
-		pso = GPOS_NEW(pmp) SSimpleRefCountObject(1, pcrcValue);
+		pso = GPOS_NEW(pmp) SSimpleObject(1, 2);
+		GPOS_ASSERT(1 == pso->UlpRefCount());
 
 	#ifdef GPOS_DEBUG
-		SSimpleRefCountObject *psoReturned =
+		SSimpleObject *psoReturned =
 	#endif // GPOS_DEBUG
 			ca.PtInsert(&(pso->m_ulKey), pso);
 
-		GPOS_ASSERT(1 == pcrcValue->UlpRefCount());
-
+		// 1 by CRefCount, 2 by CCacheEntry constructor and 3 by CCache Accessor
+		GPOS_ASSERT(3 == pso->UlpRefCount() && "Expected refcount to be 3");
 		GPOS_ASSERT(psoReturned == pso &&
 					"Incorrect cache entry was inserted");
 
-		//Ideally it shouldn't delete itself because CCache is still holding this object
-		pcrcValue->Release();
 	}
-	//Create new access for lookup
-	CSimpleRefCountObjectCacheAccessor ca(pcache);
 
-	//Ideally Lookup should return valid object. Until CCache evict and no one has reference to it, this object can't be deleted
-	ca.Lookup(&(pso->m_ulKey));
+	GPOS_ASSERT(2 == pso->UlpRefCount() &&  "Expected refcount to be 2 because CCacheAccessor goes out of scope");
 
-	//Deference it to make sure memory is valid and it doesn't throw exception / crash
-	GPOS_ASSERT(1 == (*(ca.PtVal()->m_pcrcValue)).UlpRefCount());
+	{
+		//Create new access for lookup
+		CSimpleObjectCacheAccessor ca(pcache);
+
+		//Ideally Lookup should return valid object. Until CCache evict and no one has reference to it, this object can't be deleted
+		ca.Lookup(&(pso->m_ulKey));
+
+		// 1 by CRefCount, 2 by CCacheEntry constructor and 3 by CCache Accessor
+		GPOS_ASSERT(3 == pso->UlpRefCount() && "Expected refcount to be 3");
+		// Ideally it shouldn't delete itself because CCache is still holding this object
+		pso->Release();
+		GPOS_ASSERT(2 == pso->UlpRefCount() && "Expected refcount to be 2");
+	}
+	GPOS_ASSERT(1 == pso->UlpRefCount() && "Expected refcount to be 1. Only CCacheEntry have the ownership");
 
 	return GPOS_OK;
 }
@@ -418,13 +392,21 @@ CCacheTest::EresUnittest_Refcount()
 ULLONG
 CCacheTest::InsertOneElement(CCache<SSimpleObject*, ULONG*> *pCache, ULONG ulKey)
 {
+	ULLONG ulTotalAllocatedSize = 0;
+	SSimpleObject *pso = NULL;
 	{
 		CSimpleObjectCacheAccessor ca(pCache);
 		IMemoryPool *pmp = ca.Pmp();
-		SSimpleObject *pso = GPOS_NEW(pmp) SSimpleObject(ulKey, ulKey);
+		pso = GPOS_NEW(pmp) SSimpleObject(ulKey, ulKey);
 		ca.PtInsert(&(pso->m_ulKey), pso);
-		return pmp->UllTotalAllocatedSize();
+		GPOS_ASSERT(3 == pso->UlpRefCount() && "Expected pso, cacheentry and cacheaccessor to have ownership");
+		//Remove the ownership of pso. Still CCacheEntry has the ownership
+		pso->Release();
+		GPOS_ASSERT(2 == pso->UlpRefCount() && "Expected pso and cacheentry to have ownership");
+		ulTotalAllocatedSize = pmp->UllTotalAllocatedSize();
 	}
+	GPOS_ASSERT(1 == pso->UlpRefCount() && "Expected only cacheentry to have ownership");
+	return ulTotalAllocatedSize;
 }
 
 //---------------------------------------------------------------------------

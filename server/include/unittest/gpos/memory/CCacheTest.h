@@ -39,7 +39,7 @@ namespace gpos
 
 		private:
 			// A simple object (no deep structures)
-			struct SSimpleObject
+			struct SSimpleObject : public CRefCount
 			{
 				ULONG m_ulKey;
 
@@ -83,51 +83,6 @@ namespace gpos
 				}
 			}; // struct SSimpleObject
 
-			//A simple object with ref count as value
-			struct SSimpleRefCountObject
-			{
-				ULONG m_ulKey;
-
-				CRefCount* m_pcrcValue;
-
-				SSimpleRefCountObject
-					(
-					ULONG ulKey,
-					CRefCount* pcrcValue
-					)
-					:
-					m_ulKey(ulKey),
-					m_pcrcValue(pcrcValue)
-				{
-
-				}
-
-				static ULONG UlMyHash
-					(
-					ULONG* const & pvKey
-					)
-				{
-					return *pvKey;
-				}
-
-				//key equality function
-				static BOOL FMyEqual
-					(
-					ULONG* const & pvKey,
-					ULONG* const & pvKeySecond
-					);
-
-				// equality for object-based comparison
-				BOOL operator ==
-					(
-					const SSimpleRefCountObject &obj
-					)
-					const
-				{
-					return obj.m_ulKey == m_ulKey;
-				}
-			}; // struct SSimpleRefCountObject
-
 			// helper functions
 
 			// insert elements with duplicate keys
@@ -159,7 +114,7 @@ namespace gpos
 
 
 			// An object with a deep structure
-			class CDeepObject
+			class CDeepObject : public CRefCount
 			{
 
 				private:
@@ -232,8 +187,6 @@ namespace gpos
 			// accessors type definitions
 			typedef CCacheAccessor<SSimpleObject*, ULONG*>
 				CSimpleObjectCacheAccessor;
-			typedef CCacheAccessor<SSimpleRefCountObject*, ULONG*>
-				CSimpleRefCountObjectCacheAccessor;
 			typedef CCacheAccessor
 						<CDeepObject*,
 						CDeepObject::CDeepObjectList*> CDeepObjectCacheAccessor;

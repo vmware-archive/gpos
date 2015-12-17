@@ -45,6 +45,9 @@
 // no. of hashtable buckets
 #define CACHE_HT_NUM_OF_BUCKETS 1000
 
+//eligible to delete
+#define EXPECTED_REF_COUNT_FOR_DELETE 1
+
 using namespace gpos;
 
 namespace gpos
@@ -67,6 +70,7 @@ namespace gpos
 	template <class T, class K>
 	class CCacheEntry
 	{
+		static_assert(std::is_pointer<T>::value == true, "Expect T to be pointer");
 		private:
 
 			// allocated memory pool to the cached object
@@ -77,9 +81,6 @@ namespace gpos
 
 			// true if this entry is marked for deletion
 			BOOL m_fDeleted;
-
-			// no. of active accessors of the entry
-			ULONG m_ulRefCount;
 
 			// gclock counter; an entry is eligible for eviction if this
 			// counter drops to 0 and the entry is not pinned
@@ -99,19 +100,20 @@ namespace gpos
 				m_pmp(pmp),
 				m_pVal(pVal),
 				m_fDeleted(false),
-				m_ulRefCount(0),
 				m_ulGClockCounter(ulGClockCounter),
 				m_pKey(pKey)
 			{
-
+				// CCache entry has the ownership now. So ideally any time ref count can't go lesser than 1.
+				// In destructor, we decrease it from 1 to 0.
+				IncRefCount();
 			}
 
 			// dtor
 			virtual
 			~CCacheEntry()
 			{
-				GPOS_ASSERT(0 == UlRefCount() &&
-						"Destroying a cache entry with non-zero ref. count");
+				// Decrease ref count of m_pVal to get destroyed by itself if ref count is 0
+				DecRefCount();
 			}
 
 			// gets the key of cached object
@@ -144,22 +146,22 @@ namespace gpos
 				return m_fDeleted;
 			}
 
-			// gets entry's ref-count
+			// get value's ref count
 			ULONG UlRefCount() const
 			{
-				return m_ulRefCount;
+				return m_pVal->UlpRefCount();
 			}
 
-			// increments entry's ref-count
+			// increments value's ref-count
 			void IncRefCount()
 			{
-				m_ulRefCount++;
+				m_pVal->AddRef();
 			}
 
-			//decrements entry's ref-count
+			//decrements value's ref-count
 			void DecRefCount()
 			{
-				m_ulRefCount--;
+				m_pVal->Release();
 			}
 
 			// sets the gclock counter for an entry; useful for updating counter upon access
@@ -336,8 +338,9 @@ namespace gpos
 			{
 				GPOS_ASSERT(NULL != pce);
 
-				GPOS_ASSERT(0 < pce->UlRefCount() &&
-						    "Releasing entry with non-zero ref-count");
+				// CacheEntry's destructor is the only place where ref count go from 1(EXPECTED_REF_COUNT_FOR_DELETE) to 0
+				GPOS_ASSERT(EXPECTED_REF_COUNT_FOR_DELETE < pce->UlRefCount() &&
+						    "Releasing entry for which CCacheEntry has the ownership");
 
 				BOOL fDeleted = false;
 
@@ -345,7 +348,8 @@ namespace gpos
 				{
 					CCacheHashtableAccessor shtacc(m_sht, pce->PKey());
 					pce->DecRefCount();
-					if (0 == pce->UlRefCount() && pce->FMarkedForDeletion())
+
+					if (EXPECTED_REF_COUNT_FOR_DELETE == pce->UlRefCount() && pce->FMarkedForDeletion())
 					{
 						// remove entry from hash table
 						shtacc.Remove(pce);
@@ -355,9 +359,8 @@ namespace gpos
 
 				if (fDeleted)
 				{
-					// release entry's memory
-					CMemoryPoolManager::Pmpm()->Destroy(pce->Pmp());
-					GPOS_DELETE(pce);
+					// delete cache entry
+					DestroyCacheEntry(pce);
 				}
 			}
 
@@ -446,9 +449,10 @@ namespace gpos
 			void DestroyCacheEntry(CCacheHashTableEntry *pce)
 			{
 				GPOS_ASSERT(NULL != pce);
-
-				CMemoryPoolManager::Pmpm()->Destroy(pce->Pmp());
+				// destroy the object before deleting memory pool. This cover the case where object & cacheentry use same memory pool
+				IMemoryPool* pmp = pce->Pmp();
 				GPOS_DELETE(pce);
+				CMemoryPoolManager::Pmpm()->Destroy(pmp);
 			}
 
 			// evict entries by making one pass through the hash table buckets
@@ -473,7 +477,7 @@ namespace gpos
 								// for our self reference we are using CCacheHashtableIterAccessor
 								// to directly access the entry. Therefore, we are not causing a
 								// bump to ref counter
-								if (0 == pt->UlRefCount())
+								if (EXPECTED_REF_COUNT_FOR_DELETE == pt->UlRefCount())
 								{
 									// remove advances iterator automatically
 									shtitacc.Remove(pt);
@@ -499,9 +503,7 @@ namespace gpos
 					if (fDeleted)
 					{
 						GPOS_ASSERT(NULL != pt);
-						// release entry's memory
-						CMemoryPoolManager::Pmpm()->Destroy(pt->Pmp());
-						GPOS_DELETE(pt);
+						DestroyCacheEntry(pt);
 					}
 				}
 				return ullTotalFreed;
