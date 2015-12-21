@@ -80,6 +80,19 @@ namespace gpos
 		}
 	};
 
+	//Implement is_pointer as make doesn't support std::is_pointer
+	template <typename T>
+	struct is_pointer
+	{
+		static const bool value = false;
+	};
+
+	template <typename T>
+	struct is_pointer<T*>
+	{
+		static const bool value = true;
+	};
+
 	//---------------------------------------------------------------------------
 	//	@class:
 	//		CCacheEntry
@@ -172,19 +185,19 @@ namespace gpos
 			// get value's ref count
 			ULONG UlRefCount() const
 			{
-				return ptr<std::is_pointer<T>::value, T>()(m_pVal)->UlpRefCount();
+				return (ULONG)ptr<is_pointer<T>::value, T>()(m_pVal)->UlpRefCount();
 			}
 
 			// increments value's ref-count
 			void IncRefCount()
 			{
-				ptr<std::is_pointer<T>::value, T>()(m_pVal)->AddRef();
+				ptr<is_pointer<T>::value, T>()(m_pVal)->AddRef();
 			}
 
 			//decrements value's ref-count
 			void DecRefCount()
 			{
-				ptr<std::is_pointer<T>::value, T>()(m_pVal)->Release();
+				ptr<is_pointer<T>::value, T>()(m_pVal)->Release();
 			}
 
 			// sets the gclock counter for an entry; useful for updating counter upon access
