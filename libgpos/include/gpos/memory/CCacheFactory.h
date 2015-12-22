@@ -29,11 +29,6 @@ using namespace gpos;
 
 namespace gpos
 {
-
-	//prototypes
-//	template <class T, class K>
-//	class CCache<T, K>;
-
 	//---------------------------------------------------------------------------
 	//	@class:
 	//		CCacheFactory

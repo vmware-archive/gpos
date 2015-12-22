@@ -460,7 +460,7 @@ namespace gpos
 					m_fClockHandAdvanced = false;
 					CCacheHashTableEntry *pt = NULL;
 					BOOL fDeleted = false;
-
+					// Scope for CCacheHashtableIterAccessor
 					{
 						CCacheHashtableIterAccessor shtitacc(*m_chtitClockHand);
 
