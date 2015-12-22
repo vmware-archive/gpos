@@ -13,7 +13,7 @@ set(GPOS_VERSION_STRING ${GPOS_VERSION_MAJOR}.${GPOS_VERSION_MINOR})
 # that might cause ABI changes, including adding or removing class members,
 # and things that might change vtables for classes with virtual methods. If in
 # doubt, do the safe thing and increment this number.
-set(GPOS_ABI_VERSION 7)
+set(GPOS_ABI_VERSION 8)
 
 # Check build type
 if(NOT CMAKE_BUILD_TYPE)
