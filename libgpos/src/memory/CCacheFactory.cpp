@@ -69,7 +69,6 @@ CCacheFactory::Pmp() const
 //---------------------------------------------------------------------------
 GPOS_RESULT
 CCacheFactory::EresInit()
-
 {
 	GPOS_ASSERT(NULL == Pcf() &&
 			    "Cache factory was already initialized");
