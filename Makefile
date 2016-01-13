@@ -9,7 +9,7 @@
 
 BLD_TOP := $(shell sh -c pwd)
 
-LIB_VERSION = 1.133.raghav
+LIB_VERSION = 1.133.1
 
 include make/gpo.mk
 
