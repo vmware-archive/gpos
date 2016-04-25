@@ -58,7 +58,7 @@ namespace gpos
 			CEvent m_event;
 
 			// propagate error of sub-task or not
-			BOOL m_fPropagateError;
+			BOOL m_fPropagateSubTaskError;
 
 			// find finished task;
 			GPOS_RESULT
@@ -76,10 +76,10 @@ namespace gpos
 #endif // GPOS_DEBUG
 
 			// propagate the error from sub-task to current task
-			void PropagateError(CTask *ptskSub);
+			void PropagateSubTaskError(CTask *ptskSub);
 
 			// check error from sub-task
-			void CheckError(CTask *ptskSub);
+			void CheckSubTaskError(CTask *ptskSub);
 
 		public:
 
@@ -88,7 +88,7 @@ namespace gpos
 				(
 				IMemoryPool *pmp,
 				CWorkerPoolManager *m_pwpm,
-				BOOL fPropagateError = true
+				BOOL fPropagateSubTaskError = true
 				);
 
 			// dtor
@@ -101,9 +101,9 @@ namespace gpos
 			}
 
 			// disable/enable error propagation
-			void SetPropagateError(BOOL fPropagateError)
+			void SetPropagateSubTaskError(BOOL fPropagateSubTaskError)
 			{
-				m_fPropagateError = fPropagateError;
+				m_fPropagateSubTaskError = fPropagateSubTaskError;
 			}
 
 			// create new task
