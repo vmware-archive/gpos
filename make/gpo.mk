@@ -75,7 +75,7 @@ CFLAGS_WARN = -Wall -Werror -Wextra -pedantic-errors -Wno-variadic-macros -Wconv
 CFLAGS_debug = -g3 -DGPOS_DEBUG
 CFLAGS_opt = -O3 -fno-omit-frame-pointer -g3
 
-CFLAGS_TYPE = $(CFLAGS_$(BLD_TYPE))
+CFLAGS_TYPE = -std=gnu++0x $(CFLAGS_$(BLD_TYPE))
 
 ifeq ($(ARCH_BIT), GPOS_32BIT)
 ARCH_FLAGS = -m32

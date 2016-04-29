@@ -17,6 +17,8 @@
 #ifndef GPOS_CAutoRef_H
 #define GPOS_CAutoRef_H
 
+#include <type_traits>
+
 #include "gpos/base.h"
 #include "gpos/common/CAutoPointerBase.h"
 #include "gpos/common/CRefCount.h"
@@ -36,6 +38,8 @@ namespace gpos
 	{
 
 		private:
+			static_assert(std::is_base_of<CRefCount, T>::value, "T must be a CRefCount");
+
 			typedef CAutoPointerBase<T> _base;
 
 			// hidden copy ctor
@@ -84,7 +88,7 @@ namespace gpos
 	{
 		if (NULL != _base::m_pt)
 		{
-			reinterpret_cast<CRefCount*>(_base::m_pt)->Release();
+			_base::m_pt->Release();
 		}
 	}
 }

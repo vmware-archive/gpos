@@ -23,8 +23,11 @@
 #ifndef GPOS_CAutoP_H
 #define GPOS_CAutoP_H
 
+#include <type_traits>
+
 #include "gpos/base.h"
 #include "gpos/common/CAutoPointerBase.h"
+#include "gpos/common/CRefCount.h"
 #include "gpos/common/CStackObject.h"
 
 namespace gpos
@@ -42,6 +45,8 @@ namespace gpos
 	class CAutoP : public CAutoPointerBase<T>
 	{
 		private:
+			static_assert(!std::is_base_of<CRefCount, T>::value, "T must not be a CRefCount");
+
 			typedef CAutoPointerBase<T> _base;
 
 		protected:
