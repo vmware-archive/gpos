@@ -24,6 +24,7 @@
 #define GPOS_CAutoP_H
 
 #include "gpos/base.h"
+#include "gpos/common/CAutoPointerBase.h"
 #include "gpos/common/CStackObject.h"
 
 namespace gpos
@@ -38,13 +39,12 @@ namespace gpos
 	//
 	//---------------------------------------------------------------------------
 	template <class T>
-	class CAutoP : public CStackObject
+	class CAutoP : public CAutoPointerBase<T>
 	{
+		private:
+			typedef CAutoPointerBase<T> _base;
 
 		protected:
-
-			// actual element to point to
-			T *m_pt;
 						
 			// hidden copy ctor
 			CAutoP<T>
@@ -58,52 +58,23 @@ namespace gpos
 			explicit
 			CAutoP<T>()
 				:
-				m_pt(NULL)
+					_base(NULL)
 			{}
 
 			explicit
 			CAutoP<T>(T *pt)
 				:
-				m_pt(pt)
+					_base(pt)
 			{}
 
-			// dtor
-			virtual ~CAutoP();
-
-			// simple assignment
-			CAutoP<T> const & operator = (T* pt)
+			CAutoP const& operator = (T* pt)
 			{
-				m_pt = pt;
+				_base::m_pt = pt;
 				return *this;
 			}
 
-			// deref operator
-			T &operator * ()
-			{
-				GPOS_ASSERT(NULL != m_pt);
-				return *m_pt;
-			}
-			
-			// returns only base pointer, compiler does appropriate deref'ing
-			T* operator -> ()
-			{
-				return m_pt;
-			}
-
-			// return basic pointer
-			T* Pt() 
-			{
-				return m_pt;
-			}
-			
-			// unhook pointer from auto object
-			T* PtReset()
-			{
-				T* pt = m_pt;
-				m_pt = NULL;
-				return pt;
-			}
-
+			// dtor
+			virtual ~CAutoP();
 	}; // class CAutoP
 
 	//---------------------------------------------------------------------------
@@ -117,7 +88,7 @@ namespace gpos
 	template <class T>
 	CAutoP<T>::~CAutoP()
 	{
-		GPOS_DELETE(m_pt);
+		GPOS_DELETE(_base::m_pt);
 	}
 }
 
