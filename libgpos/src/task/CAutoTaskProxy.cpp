@@ -506,14 +506,18 @@ CAutoTaskProxy::Execute
 	{
 		// mark task as erroneous
 		ptsk->SetStatus(CTask::EtsError);
-		GPOS_RETHROW(ex);
+
+		if (m_fPropagateSubTaskError)
+		{
+			GPOS_RETHROW(ex);
+		}
 	}
 	GPOS_CATCH_END;
 
-	// Raise exception if task encounters an exception
+	// reset exception context
 	if (ptsk->FPendingExc())
 	{
-		GPOS_RETHROW(ptsk->Perrctxt()->Exc());
+		ptsk->Perrctxt()->Reset();
 	}
 
 	// mark task as reported
