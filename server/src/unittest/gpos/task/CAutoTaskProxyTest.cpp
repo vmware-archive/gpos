@@ -15,12 +15,13 @@
 //
 //---------------------------------------------------------------------------
 
+#include <pthread.h>
+
 #include "gpos/memory/CAutoMemoryPool.h"
 #include "gpos/test/CUnittest.h"
 
 #include "unittest/gpos/task/CAutoTaskProxyTest.h"
 
-#include <pthread.h>
 
 using namespace gpos;
 
@@ -572,8 +573,8 @@ CAutoTaskProxyTest::EresUnittest_PropagateExecError()
 //		CAutoTaskProxyTest::EresUnittest_ExecuteError
 //
 //	@doc:
-//		Check if we can see the exception if task and autotask run in same thread
-//		through execute
+//		When task and autotask run in same thread by calling CAutoTaskProxy::Execute,
+//		check whether exception propagation is controlled by fPropagateException
 //
 //---------------------------------------------------------------------------
 GPOS_RESULT
@@ -599,7 +600,7 @@ CAutoTaskProxyTest::EresUnittest_ExecuteError()
 		return GPOS_FAILED;
 	}
 	pthread_join(st.m_pthrdt, NULL);
-	if (!st.fException)
+	if (!st.fException)  // Expect to see exception propagated
 	{
 		return GPOS_FAILED;
 	}
@@ -614,8 +615,11 @@ CAutoTaskProxyTest::EresUnittest_ExecuteError()
 		return GPOS_FAILED;
 	}
 	pthread_join(st.m_pthrdt, NULL);
-	return !st.fException ? GPOS_OK : GPOS_FAILED;
-
+	if (st.fException)  // Don't expect to see exception propagated
+	{
+		return GPOS_FAILED;
+	}
+	return GPOS_OK;
 }
 
 
