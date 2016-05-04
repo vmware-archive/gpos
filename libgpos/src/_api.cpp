@@ -170,7 +170,7 @@ int gpos_exec
 			// scope for ATP
 			{
 				// task handler for this process
-				CAutoTaskProxy atp(pmp, pwpm, false/*fPropagateError*/);
+				CAutoTaskProxy atp(pmp, pwpm, true /*fPropagateError*/);
 
 				CTask *ptsk = atp.PtskCreate(params->func, params->arg, params->abort_requested);
 
@@ -225,12 +225,12 @@ int gpos_exec
 			<< std::endl;
 
 		// unexpected failure
-		return 1;
+		throw ex;
 	}
 	catch (...)
 	{
 		// unexpected failure
-		return 1;
+		std::rethrow_exception(std::current_exception());
 	}
 
 	return 0;
