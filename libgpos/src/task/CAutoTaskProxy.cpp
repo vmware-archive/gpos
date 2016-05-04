@@ -36,12 +36,12 @@ CAutoTaskProxy::CAutoTaskProxy
 	(
 	IMemoryPool *pmp,
 	CWorkerPoolManager *pwpm,
-	BOOL fPropagateSubTaskError
+	BOOL fPropagateError
 	)
 	:
 	m_pmp(pmp),
 	m_pwpm(pwpm),
-	m_fPropagateSubTaskError(fPropagateSubTaskError)
+	m_fPropagateError(fPropagateError)
 {
 	m_list.Init(GPOS_OFFSET(CTask, m_linkAtp));
 	m_event.Init(&m_mutex);
@@ -66,7 +66,7 @@ CAutoTaskProxy::~CAutoTaskProxy()
 	CAutoSuspendAbort asa;
 
 	// disable error propagation from sub-task
-	SetPropagateSubTaskError(false);
+	SetPropagateError(false);
 
 	// destroy all tasks
 	DestroyAll();
@@ -258,7 +258,7 @@ CAutoTaskProxy::Wait
 	ptsk->SetReported();
 
 	// check error from sub-task
-	CheckSubTaskError(ptsk);
+	CheckError(ptsk);
 }
 
 
@@ -304,7 +304,7 @@ CAutoTaskProxy::EresTimedWait
 	ptsk->SetReported();
 
 	// check error from sub-task
-	CheckSubTaskError(ptsk);
+	CheckError(ptsk);
 
 	return GPOS_OK;
 }
@@ -350,7 +350,7 @@ CAutoTaskProxy::WaitAny
 	GPOS_ASSERT(NULL != *pptsk);
 
 	// check error from sub-task
-	CheckSubTaskError(*pptsk);
+	CheckError(*pptsk);
 }
 
 
@@ -404,7 +404,7 @@ CAutoTaskProxy::EresTimedWaitAny
 	GPOS_ASSERT(NULL != *pptsk);
 
 	// check error from sub-task
-	CheckSubTaskError(*pptsk);
+	CheckError(*pptsk);
 
 	return GPOS_OK;
 }
@@ -507,7 +507,7 @@ CAutoTaskProxy::Execute
 		// mark task as erroneous
 		ptsk->SetStatus(CTask::EtsError);
 
-		if (m_fPropagateSubTaskError)
+		if (m_fPropagateError)
 		{
 			GPOS_RETHROW(ex);
 		}
@@ -548,14 +548,14 @@ CAutoTaskProxy::Cancel
 
 //---------------------------------------------------------------------------
 //	@function:
-//		CAutoTaskProxy::CheckSubTaskError
+//		CAutoTaskProxy::CheckError
 //
 //	@doc:
 //		Check error from sub-task
 //
 //---------------------------------------------------------------------------
 void
-CAutoTaskProxy::CheckSubTaskError
+CAutoTaskProxy::CheckError
 	(
 	CTask *ptskSub
 	)
@@ -566,10 +566,10 @@ CAutoTaskProxy::CheckSubTaskError
 		// must be in error status
 		GPOS_ASSERT(ITask::EtsError == ptskSub->Ets());
 
-		if (m_fPropagateSubTaskError)
+		if (m_fPropagateError)
 		{
 			// propagate error from sub task to current task
-			PropagateSubTaskError(ptskSub);
+			PropagateError(ptskSub);
 		}
 		else
 		{
@@ -590,19 +590,19 @@ CAutoTaskProxy::CheckSubTaskError
 
 //---------------------------------------------------------------------------
 //	@function:
-//		CAutoTaskProxy::PropagateSubTaskError
+//		CAutoTaskProxy::PropagateError
 //
 //	@doc:
 //		Propagate the error from sub task to current task
 //
 //---------------------------------------------------------------------------
 void
-CAutoTaskProxy::PropagateSubTaskError
+CAutoTaskProxy::PropagateError
 	(
 		CTask *ptskSub
 	)
 {
-	GPOS_ASSERT(m_fPropagateSubTaskError);
+	GPOS_ASSERT(m_fPropagateError);
 
 	// sub-task must be in error status and have a pending exception
 	GPOS_ASSERT(ITask::EtsError == ptskSub->Ets() && ptskSub->FPendingExc());

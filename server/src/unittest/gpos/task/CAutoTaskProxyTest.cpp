@@ -135,7 +135,7 @@ CAutoTaskProxyTest::EresUnittest_WaitAny()
 		GPOS_ASSERT(ptsk == rgPtsk[2]);
 
 		// disable error propagation here
-		atp.SetPropagateSubTaskError(false /* fPropagateSubTaskError */);
+		atp.SetPropagateError(false /* fPropagateError */);
 
 		// cancel task
 		atp.Cancel(rgPtsk[0]);
@@ -298,7 +298,7 @@ CAutoTaskProxyTest::EresUnittest_TimedWaitAny()
 		// cancel task
 		atp.Cancel(rgPtsk[0]);
 
-		atp.SetPropagateSubTaskError(false /* fPropagateSubTaskError */);
+		atp.SetPropagateError(false /* fPropagateError */);
 
 #ifdef GPOS_DEBUG
 		eres =
@@ -350,7 +350,7 @@ CAutoTaskProxyTest::EresUnittest_Destroy()
 
 		CTask *ptsk = NULL;
 
-		atp.SetPropagateSubTaskError(false /* fPropagateSubTaskError */);
+		atp.SetPropagateError(false /* fPropagateError */);
 
 		for (ULONG i = 0; i < culTskCnt / 3; i++)
 		{
@@ -569,7 +569,7 @@ CAutoTaskProxyTest::EresUnittest_CheckErrorPropagation()
 
 		// disable error propagation
 		ptsk = atp.PtskCreate(CAutoTaskProxyTest::PvUnittest_Error, NULL);
-		atp.SetPropagateSubTaskError(false /* fPropagateSubTaskError */);
+		atp.SetPropagateError(false /* fPropagateError */);
 		atp.Schedule(ptsk);
 
 		// should not propagate error
@@ -578,7 +578,7 @@ CAutoTaskProxyTest::EresUnittest_CheckErrorPropagation()
 
 		// enable error propagation
 		ptsk = atp.PtskCreate(CAutoTaskProxyTest::PvUnittest_Error, NULL);
-		atp.SetPropagateSubTaskError(true /* fPropagateSubTaskError */);
+		atp.SetPropagateError(true /* fPropagateError */);
 		atp.Schedule(ptsk);
 		Unittest_ExecuteWaitFunc(atp, ptsk, false /* fInvokeCancel */, EwtWait);
 	}
