@@ -94,6 +94,7 @@ void gpos_init(struct gpos_init_params* params) {
 //	@doc:
 //		Set number of threads in worker pool;
 //		return 0 for successful completion, 1 for error;
+//		if any exception happens re-throw it.
 //
 //---------------------------------------------------------------------------
 int gpos_set_threads(int min, int max)
