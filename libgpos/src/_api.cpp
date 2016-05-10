@@ -231,7 +231,7 @@ int gpos_exec
 	catch (...)
 	{
 		// unexpected failure
-		std::rethrow_exception(std::current_exception());
+		throw;
 	}
 
 	return 0;
