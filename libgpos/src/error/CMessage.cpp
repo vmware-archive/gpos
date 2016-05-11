@@ -279,6 +279,12 @@ CMessage::Pmsg
 				 GPOS_WSZ_WSZLEN("Test sql error message: %ls"),
 				 1, // error message
 				 GPOS_WSZ_WSZLEN("Test sql error message")),
+
+		CMessage(CException(CException::ExmaUnknown, CException::ExmiUnknown),
+				 CException::ExsevError,
+				 GPOS_WSZ_WSZLEN("Unknown exception happened"),
+				 0,
+				 GPOS_WSZ_WSZLEN("Unknown exception happened")),
 	};
 
 	return &rgmsg[ulIndex];

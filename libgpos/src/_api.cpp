@@ -231,7 +231,7 @@ int gpos_exec
 	catch (...)
 	{
 		// unexpected failure
-		throw;
+		GPOS_RAISE(CException::ExmaUnknown, CException::ExmiUnknown);
 	}
 
 	return 0;
