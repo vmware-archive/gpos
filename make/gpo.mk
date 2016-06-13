@@ -70,7 +70,7 @@ P4 = p4
 #-------------------------------------------------------------------------------------
 # compiler flags
 
-CFLAGS_WARN = -Wall -Werror -Wextra -pedantic-errors -Wno-variadic-macros -Wconversion
+CFLAGS_WARN = -Wall -Werror -Wextra -pedantic-errors -Wno-variadic-macros -Wno-tautological-undefined-compare
 
 CFLAGS_debug = -g3 -DGPOS_DEBUG
 CFLAGS_opt = -O3 -fno-omit-frame-pointer -g3
@@ -112,7 +112,7 @@ else
 	LDSFX = so
 endif
 
-LDLIBS = -pthread -ldl -lm
+LDLIBS = -ldl -lm
 
 # add real-time lib for Solaris builds
 ifeq ($(UNAME), SunOS)
