@@ -14,9 +14,12 @@
 #include "gpos/base.h"
 #include "gpos/common/CRefCount.h"
 
+#ifdef GPOS_DEBUG
+#include "gpos/error/CAutoTrace.h"
+#endif // GPOS_DEBUG
+
 namespace gpos
 {
-	
 	// comparison function signature
 	typedef INT (*PfnCompare)(const void *, const void *);
 
@@ -99,6 +102,8 @@ namespace gpos
 #ifdef GPOS_DEBUG
 			// check if array is sorted
 			BOOL FSorted() const;
+
+			virtual void DbgPrint() const;
 #endif // GPOS_DEBUG
 						
 			// accessor for n-th element

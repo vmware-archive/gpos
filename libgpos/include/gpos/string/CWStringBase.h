@@ -24,6 +24,7 @@ namespace gpos
 {
 	class CWStringConst;
 	class IMemoryPool;
+	class IOstream;
 	
 	//---------------------------------------------------------------------------
 	//	@class:
@@ -100,6 +101,20 @@ namespace gpos
 
 			// count how many times the character appears in string
 			ULONG UlOccurences(const WCHAR wc) const;
+
+			// debug print
+			IOstream &OsPrint(IOstream &os) const
+			{
+				return os;
+			}
+
+			// override operator
+			// shorthand for printing
+			friend IOstream &operator << (IOstream &os, const CWStringBase &strbase)
+			{
+				return strbase.OsPrint(os);
+			}
+
 	};
 	
 }

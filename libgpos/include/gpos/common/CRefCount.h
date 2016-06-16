@@ -121,6 +121,17 @@ namespace gpos
 				}	
 			}
 
+			// subclass override this method to output debugging information
+			virtual IOstream &OsPrint(IOstream &os) const
+			{
+				return os;
+			}
+
+			// globally available function, not a member of CRefCount
+			friend IOstream& operator<<(IOstream& os, const CRefCount &crfcnt) {
+				return crfcnt.OsPrint(os);
+			}
+
 			// safe version of Release -- handles NULL pointers
 			static
 			void SafeRelease
@@ -135,6 +146,7 @@ namespace gpos
 			}
 	
 	}; // class CRefCount
+
 }
 
 #endif // !GPOS_CRefCount_H

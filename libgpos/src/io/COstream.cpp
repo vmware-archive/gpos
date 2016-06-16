@@ -162,6 +162,35 @@ COstream::operator <<
 	return *this;
 }
 
+//---------------------------------------------------------------------------
+//	@function:
+//		COstream::operator<<
+//
+//	@doc:
+//		write a ULONG_PTR with conversion
+//
+//---------------------------------------------------------------------------
+IOstream &
+COstream::operator <<
+	(
+	ULONG_PTR ul
+	)
+{
+	switch(FstreamMod())
+	{
+		case EsmDec:
+			return AppendFormat(GPOS_WSZ_LIT("%lu"), ul);
+
+		case EsmHex:
+			return AppendFormat(GPOS_WSZ_LIT("%lx"), ul);
+
+		default:
+			GPOS_ASSERT(!"Unexpected stream mode");
+	}
+
+	return *this;
+}
+
 
 //---------------------------------------------------------------------------
 //	@function:

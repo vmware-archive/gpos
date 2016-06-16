@@ -29,6 +29,13 @@ namespace gpos
 		void (*pfnDestroyT)(T*)>
 	class CHashMapIter;
 	
+	template <class K, class T,
+			ULONG (*pfnHash)(const K*),
+			BOOL (*pfnEq)(const K*, const K*),
+			void (*pfnDestroyK)(K*),
+			void (*pfnDestroyT)(T*)>
+	class CHashMap;
+
 	//---------------------------------------------------------------------------
 	//	@class:
 	//		CHashMap
@@ -47,7 +54,7 @@ namespace gpos
 		// fwd declaration
 		friend class CHashMapIter<K, T, pfnHash, pfnEq, pfnDestroyK, pfnDestroyT>;
 
-		private:
+		public:
 		
 			//---------------------------------------------------------------------------
 			//	@class:
@@ -99,7 +106,19 @@ namespace gpos
 					{
 						return pfnEq(m_pk, hme.m_pk);
 					}
+
+					IOstream &OsPrint(IOstream &os) const
+					{
+						return os;
+					}
+
+					friend IOstream& operator<<(IOstream& os,  const CHashMapElem &hme)
+					{
+						return hme.OsPrint(os);
+					}
 			};
+
+		private:
 
 			// memory pool
 			IMemoryPool *m_pmp;
@@ -155,7 +174,6 @@ namespace gpos
 			}		
 
 	}; // class CHashMap
-
 }
 
 // inline'd functions

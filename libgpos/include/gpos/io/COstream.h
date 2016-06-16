@@ -59,6 +59,7 @@ namespace gpos
 			virtual IOstream& operator<< (const CHAR);
 			virtual IOstream& operator<< (ULONG);
 			virtual IOstream& operator<< (ULLONG);
+			virtual IOstream& operator<< (ULONG_PTR);
 			virtual IOstream& operator<< (INT);
 			virtual IOstream& operator<< (LINT);
 			virtual IOstream& operator<< (DOUBLE);

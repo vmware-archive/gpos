@@ -15,7 +15,6 @@
 
 namespace gpos
 {
-	
 	//---------------------------------------------------------------------------
 	//	@function:
 	//		CDynamicPtrArray::CDynamicPtrArray
@@ -277,6 +276,21 @@ namespace gpos
 		}
 		
 		return true;
+	}
+
+	template<class T, void (*pfnDestroy)(T*)>
+	void
+	CDynamicPtrArray<T, pfnDestroy>::DbgPrint() const
+	{
+		for (ULONG i = 1; i < m_ulSize; i++)
+		{
+			if (m_ppt[i])
+			{
+				// DbgPrint is not a method of many objects, try <<
+				CAutoTrace at(m_pmp);
+				at.Os() << *m_ppt[i];
+			}
+		}
 	}
 #endif // GPOS_DEBUG
 

@@ -32,8 +32,41 @@ namespace gpos
 	{
 		// bitset iter needs to access internals
 		friend class CBitSetIter;
+
+		public:
+		class CBitSetLink;
 		
 		protected:
+
+			// list of bit set links
+			typedef CList<CBitSetLink> BSLList;
+			BSLList m_bsllist;
+
+			// pool to allocate links from
+			IMemoryPool *m_pmp;
+
+			// size of individual bitvectors
+			ULONG m_cSizeBits;
+
+			// number of elements
+			ULONG m_cElements;
+
+			// private copy ctor
+			CBitSet(const CBitSet&);
+
+			// find link with offset less or equal to given value
+			CBitSetLink *PbslLocate(ULONG, CBitSetLink * = NULL) const;
+
+			// reset set
+			void Clear();
+
+			// compute target offset
+			ULONG UlOffset(ULONG) const;
+
+			// re-compute size of set
+			void RecomputeSize();
+
+		public:
 
 			//---------------------------------------------------------------------------
 			//	@class:
@@ -59,10 +92,10 @@ namespace gpos
 				public:
 				
 					// ctor
-                    explicit
-                    CBitSetLink(IMemoryPool *, ULONG ulOffset, ULONG cSizeBits);
+					explicit
+					CBitSetLink(IMemoryPool *, ULONG ulOffset, ULONG cSizeBits);
 
-        			explicit
+					explicit
 					CBitSetLink(IMemoryPool *, const CBitSetLink &);
 					
 					// dtor
@@ -83,37 +116,12 @@ namespace gpos
 					// list link
 					SLink m_link;
 					
+					IOstream &OsPrint(IOstream &os) const
+					{
+						return os;
+					}
+
 			}; // class CBitSetLink
-		
-			// list of bit set links
-			typedef CList<CBitSetLink> BSLList;
-			BSLList m_bsllist;
-		
-			// pool to allocate links from
-			IMemoryPool *m_pmp;
-		
-			// size of individual bitvectors
-			ULONG m_cSizeBits;
-			
-			// number of elements
-			ULONG m_cElements;
-		
-			// private copy ctor
-			CBitSet(const CBitSet&);
-			
-			// find link with offset less or equal to given value
-			CBitSetLink *PbslLocate(ULONG, CBitSetLink * = NULL) const;
-			
-			// reset set
-			void Clear();
-			
-			// compute target offset
-			ULONG UlOffset(ULONG) const;
-			
-			// re-compute size of set
-			void RecomputeSize();
-			
-		public:
 				
 			// ctor
 			CBitSet(IMemoryPool *pmp, ULONG cSizeBits = 256);
@@ -173,6 +181,13 @@ namespace gpos
 		)
 	{
 		return bs.OsPrint(os);
+	}
+
+	// shorthand for printing
+	inline
+	IOstream &operator << (IOstream &os, CBitSet::CBitSetLink &cbslnk)
+	{
+		return cbslnk.OsPrint(os);
 	}
 }
 

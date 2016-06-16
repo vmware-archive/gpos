@@ -86,6 +86,16 @@ namespace gpos
 					{
 						return pfnEq(m_pt, hse.m_pt);
 					}
+
+					IOstream &OsPrint(IOstream &os) const
+					{
+						return os;
+					}
+
+					friend IOstream& operator<<(IOstream& os,  const CHashSetElem &hse)
+					{
+						return hse.OsPrint(os);
+					}
 			};	// class CHashSetElem
 
 			// memory pool
