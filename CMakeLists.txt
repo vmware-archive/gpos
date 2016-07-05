@@ -15,6 +15,7 @@ set(GPOS_VERSION_STRING ${GPOS_VERSION_MAJOR}.${GPOS_VERSION_MINOR})
 # doubt, do the safe thing and increment this number.
 set(GPOS_ABI_VERSION 10)
 
+set(CMAKE_CXX_STANDARD 11)
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)

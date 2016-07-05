@@ -13,6 +13,7 @@
 //---------------------------------------------------------------------------
 
 #include "gpos/base.h"
+#include "gpos/common/CAutoP.h"
 #include "gpos/common/CAutoRef.h"
 #include "gpos/common/CBitSet.h"
 #include "gpos/common/CBitSetIter.h"

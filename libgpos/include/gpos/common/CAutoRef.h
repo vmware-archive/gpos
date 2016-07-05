@@ -11,8 +11,10 @@
 #ifndef GPOS_CAutoRef_H
 #define GPOS_CAutoRef_H
 
+#include <type_traits>
+
 #include "gpos/base.h"
-#include "gpos/common/CAutoP.h"
+#include "gpos/common/CAutoPointerBase.h"
 #include "gpos/common/CRefCount.h"
 
 namespace gpos
@@ -26,10 +28,13 @@ namespace gpos
 	//
 	//---------------------------------------------------------------------------
 	template <class T>
-	class CAutoRef : public CAutoP<T>
+	class CAutoRef : public CAutoPointerBase<T>
 	{
 
 		private:
+			static_assert(std::is_base_of<CRefCount, T>::value, "T must be a CRefCount");
+
+			typedef CAutoPointerBase<T> _base;
 
 			// hidden copy ctor
 			CAutoRef<T>
@@ -43,14 +48,14 @@ namespace gpos
 			explicit
 			CAutoRef<T>()
 				:
-				CAutoP<T>()
+				_base()
 			{}
 
 			// ctor
 			explicit
 			CAutoRef<T>(T *pt)
 				:
-				CAutoP<T>(pt)
+				_base(pt)
 			{}
 
 			virtual ~CAutoRef();
@@ -58,7 +63,7 @@ namespace gpos
 			// simple assignment
 			CAutoRef<T> const & operator = (T* pt)
 			{
-				CAutoP<T>::m_pt = pt;
+				_base::m_pt = pt;
 				return *this;
 			}
 
@@ -75,13 +80,10 @@ namespace gpos
 	template <class T>
 	CAutoRef<T>::~CAutoRef()
 	{
-		if (NULL != CAutoP<T>::m_pt)
+		if (NULL != _base::m_pt)
 		{
-			reinterpret_cast<CRefCount*>(CAutoP<T>::m_pt)->Release();
+			_base::m_pt->Release();
 		}
-
-		// null out pointer before ~CAutoP() gets called
-		CAutoP<T>::m_pt = NULL;
 	}
 }
 
