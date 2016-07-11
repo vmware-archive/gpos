@@ -223,8 +223,6 @@ add_library(gpos
             libgpos/include/gpos/memory/ICache.h
             libgpos/include/gpos/memory/IMemoryVisitor.h
             libgpos/include/gpos/memory/README.md
-            libgpos/include/gpos/net/CAutoSocketProxy.h
-            libgpos/include/gpos/net/CSocketConnector.h
             libgpos/include/gpos/net/nettypes.h
             libgpos/include/gpos/sync/CAtomicCounter.h
             libgpos/include/gpos/sync/CMutex.h
@@ -342,14 +340,6 @@ add_library(gpos
             libgpos/src/memory/CSlabCache.cpp
             libgpos/include/gpos/memory/IMemoryPool.h
             libgpos/src/memory/IMemoryPool.cpp
-            libgpos/include/gpos/net/CSocket.h
-            libgpos/src/net/CSocket.cpp
-            libgpos/include/gpos/net/CSocketConnectorUDS.h
-            libgpos/src/net/CSocketConnectorUDS.cpp
-            libgpos/include/gpos/net/CSocketListener.h
-            libgpos/src/net/CSocketListener.cpp
-            libgpos/include/gpos/net/CSocketListenerUDS.h
-            libgpos/src/net/CSocketListenerUDS.cpp
             libgpos/include/gpos/net/netutils.h
             libgpos/src/net/netutils.cpp
             libgpos/include/gpos/string/CStringStatic.h
