@@ -32,6 +32,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# Turn on GPOS_DEBUG define for DEBUG builds.
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(GPOS_DEBUG 1)
+endif()
+
 # Override CMAKE_SYSTEM_PROCESSOR if it has been explicitly set in a toolchain file.
 if (FORCED_CMAKE_SYSTEM_PROCESSOR)
   set(CMAKE_SYSTEM_PROCESSOR ${FORCED_CMAKE_SYSTEM_PROCESSOR})
@@ -101,12 +106,6 @@ check_cxx_compiler_flag("-fno-omit-frame-pointer"
 if (COMPILER_HAS_FNO_OMIT_FRAME_POINTER)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 endif()
-
-# Turn on GPOS_DEBUG define for DEBUG builds.
-cmake_policy(SET CMP0043 NEW)
-set_property(
-    DIRECTORY
-    APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:GPOS_DEBUG>)
 
 # Autodetect bit-width if not already set by toolchain file.
 if (NOT GPOS_ARCH_BITS)
