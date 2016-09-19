@@ -2806,11 +2806,6 @@
 #define obstack_chunk_free GPOS_BANNED_API(obstack_chunk_free)
 #endif
 
-#ifndef ALLOW_obstack_object_size
-#undef obstack_object_size
-#define obstack_object_size GPOS_BANNED_API(obstack_object_size)
-#endif
-
 #ifndef ALLOW_obstack_free
 #undef obstack_free
 #define obstack_free GPOS_BANNED_API(obstack_free)
@@ -4389,11 +4384,6 @@
 #ifndef ALLOW_vscanf
 #undef vscanf
 #define vscanf GPOS_BANNED_API(vscanf)
-#endif
-
-#ifndef ALLOW_va_start
-#undef va_start
-#define va_start GPOS_BANNED_API(va_start)
 #endif
 
 #ifndef ALLOW_vswprintf
