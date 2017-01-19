@@ -32,6 +32,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# Turn on GPOS_DEBUG define for DEBUG builds.
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(GPOS_DEBUG 1)
+endif()
+
 # Override CMAKE_SYSTEM_PROCESSOR if it has been explicitly set in a toolchain file.
 if (FORCED_CMAKE_SYSTEM_PROCESSOR)
   set(CMAKE_SYSTEM_PROCESSOR ${FORCED_CMAKE_SYSTEM_PROCESSOR})
@@ -102,19 +107,6 @@ if (COMPILER_HAS_FNO_OMIT_FRAME_POINTER)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 endif()
 
-# Turn on GPOS_DEBUG define for DEBUG builds.
-cmake_policy(SET CMP0043 NEW)
-set_property(
-    DIRECTORY
-    APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:GPOS_DEBUG>)
-
-# Turn on platform-specific defines.
-set_property(
-    DIRECTORY
-    APPEND PROPERTY COMPILE_DEFINITIONS
-        GPOS_${CMAKE_SYSTEM_NAME}
-        GPOS_${CMAKE_SYSTEM_PROCESSOR})
-
 # Autodetect bit-width if not already set by toolchain file.
 if (NOT GPOS_ARCH_BITS)
   # Autodetect bit-width.
@@ -132,11 +124,6 @@ if (NOT GPOS_ARCH_BITS)
     message(FATAL_ERROR "Could not detect 32-bit OR 64-bit architecture")
   endif()
 endif()
-
-set_property(
-    DIRECTORY
-    APPEND PROPERTY COMPILE_DEFINITIONS
-        GPOS_${GPOS_ARCH_BITS}BIT)
 
 # Need pthreads.
 find_package(Threads REQUIRED)
@@ -158,9 +145,14 @@ endif()
 
 include_directories(libgpos/include)
 
-# Generate version-number header.
+# Generate version-number and config headers.
 configure_file(version.h.in
                ${PROJECT_BINARY_DIR}/libgpos/include/gpos/version.h)
+configure_file(config.h.in
+               ${PROJECT_BINARY_DIR}/libgpos/include/gpos/config.h)
+
+# Make the generated header files available at compilation of libgpos itself.
+include_directories(${PROJECT_BINARY_DIR}/libgpos/include/)
 
 # Compile .cpp source files under libgpos/src into monolithic gpos library.
 add_library(gpos
@@ -428,11 +420,15 @@ if (VERBOSE_INSTALL_PATH)
   install(DIRECTORY libgpos/include/gpos DESTINATION "${installpath}/include")
   install(FILES "${PROJECT_BINARY_DIR}/libgpos/include/gpos/version.h"
           DESTINATION "${installpath}/include/gpos")
+  install(FILES "${PROJECT_BINARY_DIR}/libgpos/include/gpos/config.h"
+          DESTINATION "${installpath}/include/gpos")
 else()
   get_filename_component(full_install_name_dir "${CMAKE_INSTALL_PREFIX}/lib" ABSOLUTE)
   install(TARGETS gpos DESTINATION lib)
   install(DIRECTORY libgpos/include/gpos DESTINATION include)
   install(FILES "${PROJECT_BINARY_DIR}/libgpos/include/gpos/version.h"
+          DESTINATION include/gpos)
+  install(FILES "${PROJECT_BINARY_DIR}/libgpos/include/gpos/config.h"
           DESTINATION include/gpos)
 endif()
 
